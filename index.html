@@ -1,162 +1,85 @@
 <!DOCTYPE html>
-<html lang="es" x-data="loginForm()" x-init="checkSession()" @keydown.enter.prevent="login()">
+<html lang="es">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Finanzas Personales - Login</title>
-
+  <title>Login - Panel Financiero</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
 </head>
+<body class="bg-gradient-to-br from-blue-100 to-blue-300 min-h-screen flex items-center justify-center">
 
-<body class="bg-gradient-to-r from-blue-100 via-blue-300 to-blue-500 min-h-screen flex items-center justify-center">
-
-  <div class="bg-white shadow-xl rounded-2xl p-8 w-full max-w-md space-y-6">
-
+  <div class="bg-white p-8 rounded-xl shadow-lg w-full max-w-md space-y-6">
+    <!-- Logo -->
     <div class="flex justify-center">
-      <img src="img/logo.png" alt="Logo Finanzas" class="w-24 h-24 object-contain" />
+      <img src="img/logo.png" alt="Logo" class="w-16 h-16 rounded-full" />
     </div>
 
-    <h1 class="text-2xl font-bold text-center text-blue-700">Gestión de Finanzas</h1>
+    <h2 class="text-2xl font-bold text-center text-blue-700">Bienvenido al Panel Financiero</h2>
 
-    <input
-      type="text"
-      x-model="nombre"
-      placeholder="Nombre de usuario"
-      class="p-3 border border-gray-300 rounded-lg w-full focus:ring-2 focus:ring-blue-400"
-      required
-    />
+    <div class="space-y-4">
+      <input
+        type="text"
+        id="usuario"
+        placeholder="Usuario"
+        class="w-full p-3 border rounded focus:ring focus:ring-blue-300"
+      />
+      <input
+        type="email"
+        id="correo"
+        placeholder="Correo electrónico"
+        class="w-full p-3 border rounded focus:ring focus:ring-blue-300"
+      />
+      <input
+        type="password"
+        id="password"
+        placeholder="Contraseña"
+        class="w-full p-3 border rounded focus:ring focus:ring-blue-300"
+      />
 
-    <input
-      type="email"
-      x-model="correo"
-      placeholder="Correo electrónico"
-      class="p-3 border border-gray-300 rounded-lg w-full focus:ring-2 focus:ring-blue-400"
-      required
-    />
-
-    <input
-      type="password"
-      x-model="password"
-      placeholder="Contraseña"
-      class="p-3 border border-gray-300 rounded-lg w-full focus:ring-2 focus:ring-blue-400"
-      required
-      minlength="6"
-    />
-
-    <div class="flex flex-col sm:flex-row gap-3">
       <button
-        @click="registrar"
-        :disabled="loading"
-        class="bg-green-600 text-white py-2 rounded hover:bg-green-700 transition w-full disabled:opacity-50"
+        onclick="registrar()"
+        class="w-full bg-green-500 text-white py-2 rounded hover:bg-green-600 transition"
       >
         Registrarse
       </button>
       <button
-        @click="login"
-        :disabled="loading"
-        class="bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition w-full disabled:opacity-50"
+        onclick="iniciarSesion()"
+        class="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600 transition"
       >
-        Ingresar
+        Iniciar Sesión
       </button>
     </div>
-
-    <template x-if="error">
-      <div class="text-red-600 text-sm text-center" x-text="error"></div>
-    </template>
-    <template x-if="success">
-      <div class="text-green-600 text-sm text-center" x-text="success"></div>
-    </template>
-
   </div>
 
   <script>
-    function loginForm() {
-      return {
-        nombre: '',
-        correo: '',
-        password: '',
-        error: '',
-        success: '',
-        loading: false,
+    function registrar() {
+      const usuario = document.getElementById('usuario').value;
+      const correo = document.getElementById('correo').value;
+      const password = document.getElementById('password').value;
 
-        // Revisa si ya hay sesión activa y redirige al dashboard
-        checkSession() {
-          const loggedIn = localStorage.getItem('loggedIn');
-          if (loggedIn === 'true') {
-            window.location.href = "dashboard.html";
-          }
-        },
+      if (usuario && correo && password) {
+        localStorage.setItem('usuario', usuario);
+        localStorage.setItem('correo', correo);
+        localStorage.setItem('password', password);
+        localStorage.setItem('loggedIn', 'true');
+        window.location.href = 'dashboard.html';
+      } else {
+        alert('Por favor, complete todos los campos.');
+      }
+    }
 
-        registrar() {
-          this.error = '';
-          this.success = '';
+    function iniciarSesion() {
+      const usuario = document.getElementById('usuario').value;
+      const password = document.getElementById('password').value;
+      const storedUser = localStorage.getItem('usuario');
+      const storedPass = localStorage.getItem('password');
 
-          if (!this.nombre || !this.correo || !this.password) {
-            this.error = "Debes ingresar nombre, correo y contraseña para registrarte.";
-            return;
-          }
-
-          if (!this.validarCorreo(this.correo)) {
-            this.error = "Por favor, ingresa un correo válido.";
-            return;
-          }
-
-          if (this.password.length < 6) {
-            this.error = "La contraseña debe tener al menos 6 caracteres.";
-            return;
-          }
-
-          this.loading = true;
-          setTimeout(() => {
-            localStorage.setItem('usuario', this.nombre);
-            localStorage.setItem('correo', this.correo);
-            localStorage.setItem('clave', this.password);
-            localStorage.setItem('loggedIn', 'true'); // marcar como logueado
-
-            this.loading = false;
-            this.error = '';
-            this.success = "¡Registrado correctamente! Redirigiendo...";
-
-            // Redirigir al dashboard
-            window.location.href = "dashboard.html";
-          }, 500);
-        },
-
-        login() {
-          this.error = '';
-          this.success = '';
-
-          const registrado = localStorage.getItem('usuario');
-          const correoGuardado = localStorage.getItem('correo');
-          const clave = localStorage.getItem('clave');
-
-          if (!registrado || !correoGuardado || !clave) {
-            this.error = "No hay usuarios registrados. Por favor, regístrate primero.";
-            return;
-          }
-
-          if (
-            this.nombre === registrado &&
-            this.correo === correoGuardado &&
-            this.password === clave
-          ) {
-            this.loading = true;
-            setTimeout(() => {
-              localStorage.setItem('loggedIn', 'true'); // marcar sesión iniciada
-              this.loading = false;
-              window.location.href = "dashboard.html";
-            }, 300);
-          } else {
-            this.error = "Usuario, correo o contraseña incorrectos.";
-          }
-        },
-
-        validarCorreo(email) {
-          const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-          return re.test(email);
-        }
-      };
+      if (usuario === storedUser && password === storedPass) {
+        localStorage.setItem('loggedIn', 'true');
+        window.location.href = 'dashboard.html';
+      } else {
+        alert('Usuario o contraseña incorrectos.');
+      }
     }
   </script>
 </body>
