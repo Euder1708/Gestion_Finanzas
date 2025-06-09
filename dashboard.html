@@ -9,13 +9,22 @@
 </head>
 <body class="bg-gradient-to-br from-blue-100 to-blue-300 min-h-screen p-6">
 
-  <!-- Encabezado con logo -->
+  <!-- Encabezado con logo y botón Cerrar sesión -->
   <header class="flex items-center justify-between bg-white shadow-lg rounded-xl p-4 mb-8">
     <div class="flex items-center space-x-3">
       <img src="img/logo.png" alt="Logo" class="w-10 h-10 rounded-full">
       <h1 class="text-2xl font-bold text-blue-700">Finanzas de <span x-text="user"></span></h1>
     </div>
-    <span class="text-sm text-gray-500">Dashboard Personal</span>
+    <div class="flex items-center space-x-4">
+      <span class="text-sm text-gray-500">Dashboard Personal</span>
+      <button 
+        @click="logout()" 
+        class="bg-red-600 text-white px-4 py-2 rounded-lg shadow hover:bg-red-700 transition"
+        title="Cerrar sesión"
+      >
+        Cerrar sesión
+      </button>
+    </div>
   </header>
 
   <!-- Botones -->
@@ -90,6 +99,14 @@
 
         balance() {
           return this.ingresos - this.gastos;
+        },
+
+        logout() {
+          localStorage.removeItem('loggedIn');
+          localStorage.removeItem('usuario');
+          localStorage.removeItem('correo');
+          localStorage.removeItem('clave');
+          window.location.href = 'login.html'; // Cambia si tu archivo de login tiene otro nombre
         }
       }
     }
