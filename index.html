@@ -37,15 +37,15 @@
         email: '',
         password: '',
         error: '',
-        login() {
-          if (!this.email || !this.password) {
-            this.error = "Por favor completa todos los campos.";
-            return;
-          }
-          this.error = '';
-          alert(`Bienvenido, ${this.email}`);
-          // Aquí podrías redirigir o guardar sesión
-        }
+      login() {
+  if (!this.email || !this.password) {
+    this.error = "Por favor completa todos los campos.";
+    return;
+  }
+  this.error = '';
+  window.location.href = "dashboard.html"; // redirigir
+}
+
       };
     }
   </script>
