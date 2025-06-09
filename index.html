@@ -5,11 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Finanzas Personales - Login</title>
 
-  <!-- Tailwind CDN -->
+  <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
-
-  <!-- Estilos propios si los usas -->
-  <!-- <link rel="stylesheet" href="css/styles.css" /> -->
 
   <!-- Alpine.js -->
   <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
@@ -17,35 +14,52 @@
 
 <body class="bg-gradient-to-r from-blue-100 via-blue-300 to-blue-500 min-h-screen flex items-center justify-center">
 
-  <div class="bg-white shadow-lg rounded-xl p-8 w-full max-w-md">
-    <h1 class="text-2xl font-bold text-center mb-6 text-blue-700">Iniciar Sesión</h1>
+  <div class="bg-white shadow-xl rounded-2xl p-8 w-full max-w-md space-y-6">
 
+    <!-- LOGO -->
+    <div class="flex justify-center">
+      <img src="img/logo.png" alt="Logo Finanzas" class="w-24 h-24 object-contain" />
+    </div>
+
+    <!-- Título -->
+    <h1 class="text-2xl font-bold text-center text-blue-700">Iniciar Sesión</h1>
+
+    <!-- Formulario -->
     <form @submit.prevent="login" class="flex flex-col space-y-4">
+      <input type="text" x-model="nombre" placeholder="Nombre de usuario" class="p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400" required />
       <input type="email" x-model="email" placeholder="Correo electrónico" class="p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400" required />
       <input type="password" x-model="password" placeholder="Contraseña" class="p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400" required />
       <button type="submit" class="bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition duration-300">Ingresar</button>
     </form>
 
+    <!-- Error -->
     <template x-if="error">
-      <div class="mt-4 text-red-600 text-sm text-center" x-text="error"></div>
+      <div class="text-red-600 text-sm text-center" x-text="error"></div>
     </template>
+
+    <!-- Ya tienes sesión -->
+    <div class="text-center text-sm text-gray-600 mt-4">
+      ¿Ya tienes sesión iniciada? 
+      <a href="dashboard.html" class="text-blue-700 underline hover:text-blue-900">Ir al Dashboard</a>
+    </div>
   </div>
 
   <script>
     function loginForm() {
       return {
+        nombre: '',
         email: '',
         password: '',
         error: '',
-      login() {
-  if (!this.email || !this.password) {
-    this.error = "Por favor completa todos los campos.";
-    return;
-  }
-  this.error = '';
-  window.location.href = "dashboard.html"; // redirigir
-}
-
+        login() {
+          if (!this.email || !this.password || !this.nombre) {
+            this.error = "Por favor completa todos los campos.";
+            return;
+          }
+          this.error = '';
+          localStorage.setItem('usuario', this.nombre);
+          window.location.href = "dashboard.html";
+        }
       };
     }
   </script>
