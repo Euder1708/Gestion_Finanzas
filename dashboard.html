@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="es" x-data="dashboard()">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mi Panel Financiero</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+</head>
+<body class="bg-gray-100 min-h-screen p-6">
+
+  <header class="mb-6">
+    <h1 class="text-3xl font-bold text-blue-700">Bienvenido, <span x-text="user"></span></h1>
+  </header>
+
+  <!-- Botones -->
+  <div class="flex space-x-4 mb-6">
+    <button @click="mostrarIngreso = !mostrarIngreso" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">+ Ingreso</button>
+    <button @click="mostrarGasto = !mostrarGasto" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">+ Gasto</button>
+  </div>
+
+  <!-- Formulario Ingreso -->
+  <div x-show="mostrarIngreso" class="bg-white p-4 mb-6 rounded shadow">
+    <h2 class="font-semibold text-gray-700 mb-2">Agregar Ingreso</h2>
+    <input type="number" x-model="nuevoIngreso" class="p-2 border rounded w-full mb-2" placeholder="Monto del ingreso" />
+    <button @click="agregarIngreso()" class="bg-green-600 text-white px-4 py-2 rounded">Guardar</button>
+  </div>
+
+  <!-- Formulario Gasto -->
+  <div x-show="mostrarGasto" class="bg-white p-4 mb-6 rounded shadow">
+    <h2 class="font-semibold text-gray-700 mb-2">Agregar Gasto</h2>
+    <input type="number" x-model="nuevoGasto" class="p-2 border rounded w-full mb-2" placeholder="Monto del gasto" />
+    <button @click="agregarGasto()" class="bg-red-600 text-white px-4 py-2 rounded">Guardar</button>
+  </div>
+
+  <!-- Tarjetas -->
+  <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div class="bg-white rounded-xl shadow p-5 border-l-8 border-green-400">
+      <h2 class="text-lg font-semibold text-gray-600">Ingresos</h2>
+      <p class="text-2xl font-bold text-green-600">$<span x-text="ingresos"></span></p>
+    </div>
+
+    <div class="bg-white rounded-xl shadow p-5 border-l-8 border-red-400">
+      <h2 class="text-lg font-semibold text-gray-600">Gastos</h2>
+      <p class="text-2xl font-bold text-red-600">$<span x-text="gastos"></span></p>
+    </div>
+
+    <div class="bg-white rounded-xl shadow p-5 border-l-8 border-blue-400">
+      <h2 class="text-lg font-semibold text-gray-600">Balance</h2>
+      <p class="text-2xl font-bold text-blue-600">$<span x-text="balance()"></span></p>
+    </div>
+  </section>
+
+  <script>
+    function dashboard() {
+      return {
+        user: "Euder",
+        ingresos: 1500,
+        gastos: 900,
+        nuevoIngreso: '',
+        nuevoGasto: '',
+        mostrarIngreso: false,
+        mostrarGasto: false,
+
+        agregarIngreso() {
+          const monto = parseFloat(this.nuevoIngreso);
+          if (!isNaN(monto) && monto > 0) {
+            this.ingresos += monto;
+            this.nuevoIngreso = '';
+            this.mostrarIngreso = false;
+          }
+        },
+
+        agregarGasto() {
+          const monto = parseFloat(this.nuevoGasto);
+          if (!isNaN(monto) && monto > 0) {
+            this.gastos += monto;
+            this.nuevoGasto = '';
+            this.mostrarGasto = false;
+          }
+        },
+
+        balance() {
+          return this.ingresos - this.gastos;
+        }
+      }
+    }
+  </script>
+
+</body>
+</html>
