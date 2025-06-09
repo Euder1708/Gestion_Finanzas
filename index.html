@@ -1,14 +1,11 @@
 <!DOCTYPE html>
-<html lang="es" x-data="loginForm()">
+<html lang="es" x-data="loginForm()" @keydown.enter.prevent="login()">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Finanzas Personales - Login</title>
 
-  <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
-
-  <!-- Alpine.js -->
   <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
 </head>
 
@@ -16,49 +13,138 @@
 
   <div class="bg-white shadow-xl rounded-2xl p-8 w-full max-w-md space-y-6">
 
-    <!-- LOGO -->
     <div class="flex justify-center">
       <img src="img/logo.png" alt="Logo Finanzas" class="w-24 h-24 object-contain" />
     </div>
 
-    <!-- Título -->
-    <h1 class="text-2xl font-bold text-center text-blue-700">Iniciar Sesión</h1>
+    <h1 class="text-2xl font-bold text-center text-blue-700">Gestión de Finanzas</h1>
 
-    <!-- Formulario -->
-    <form @submit.prevent="login" class="flex flex-col space-y-4">
-      <input type="text" x-model="nombre" placeholder="Nombre de usuario" class="p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400" required />
-      <input type="email" x-model="email" placeholder="Correo electrónico" class="p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400" required />
-      <input type="password" x-model="password" placeholder="Contraseña" class="p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400" required />
-      <button type="submit" class="bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition duration-300">Ingresar</button>
-    </form>
+    <input
+      type="text"
+      x-model="nombre"
+      placeholder="Nombre de usuario"
+      class="p-3 border border-gray-300 rounded-lg w-full focus:ring-2 focus:ring-blue-400"
+      required
+    />
 
-    <!-- Error -->
+    <input
+      type="email"
+      x-model="correo"
+      placeholder="Correo electrónico"
+      class="p-3 border border-gray-300 rounded-lg w-full focus:ring-2 focus:ring-blue-400"
+      required
+    />
+
+    <input
+      type="password"
+      x-model="password"
+      placeholder="Contraseña"
+      class="p-3 border border-gray-300 rounded-lg w-full focus:ring-2 focus:ring-blue-400"
+      required
+      minlength="6"
+    />
+
+    <div class="flex flex-col sm:flex-row gap-3">
+      <button
+        @click="registrar"
+        :disabled="loading"
+        class="bg-green-600 text-white py-2 rounded hover:bg-green-700 transition w-full disabled:opacity-50"
+      >
+        Registrarse
+      </button>
+      <button
+        @click="login"
+        :disabled="loading"
+        class="bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition w-full disabled:opacity-50"
+      >
+        Ingresar
+      </button>
+    </div>
+
     <template x-if="error">
       <div class="text-red-600 text-sm text-center" x-text="error"></div>
     </template>
+    <template x-if="success">
+      <div class="text-green-600 text-sm text-center" x-text="success"></div>
+    </template>
 
-    <!-- Ya tienes sesión -->
-    <div class="text-center text-sm text-gray-600 mt-4">
-      ¿Ya tienes sesión iniciada? 
-      <a href="dashboard.html" class="text-blue-700 underline hover:text-blue-900">Ir al Dashboard</a>
-    </div>
   </div>
 
   <script>
     function loginForm() {
       return {
         nombre: '',
-        email: '',
+        correo: '',
         password: '',
         error: '',
-        login() {
-          if (!this.email || !this.password || !this.nombre) {
-            this.error = "Por favor completa todos los campos.";
+        success: '',
+        loading: false,
+
+        registrar() {
+          this.error = '';
+          this.success = '';
+
+          if (!this.nombre || !this.correo || !this.password) {
+            this.error = "Debes ingresar nombre, correo y contraseña para registrarte.";
             return;
           }
+
+          if (!this.validarCorreo(this.correo)) {
+            this.error = "Por favor, ingresa un correo válido.";
+            return;
+          }
+
+          if (this.password.length < 6) {
+            this.error = "La contraseña debe tener al menos 6 caracteres.";
+            return;
+          }
+
+          this.loading = true;
+          setTimeout(() => {
+            localStorage.setItem('usuario', this.nombre);
+            localStorage.setItem('correo', this.correo);
+            localStorage.setItem('clave', this.password);
+            this.success = "¡Registrado correctamente! Ahora puedes iniciar sesión.";
+            this.loading = false;
+            this.nombre = '';
+            this.correo = '';
+            this.password = '';
+          }, 500);
+        },
+
+        login() {
           this.error = '';
-          localStorage.setItem('usuario', this.nombre);
-          window.location.href = "dashboard.html";
+          this.success = '';
+
+          const registrado = localStorage.getItem('usuario');
+          const correoGuardado = localStorage.getItem('correo');
+          const clave = localStorage.getItem('clave');
+
+          if (!registrado || !correoGuardado || !clave) {
+            this.error = "No hay usuarios registrados. Por favor, regístrate primero.";
+            return;
+          }
+
+          if (
+            this.nombre === registrado &&
+            this.correo === correoGuardado &&
+            this.password === clave
+          ) {
+            this.loading = true;
+            setTimeout(() => {
+              this.error = '';
+              this.success = '';
+              window.location.href = "dashboard.html";
+            }, 300);
+          } else {
+            this.error = "Usuario, correo o contraseña incorrectos.";
+          }
+        },
+
+        validarCorreo(email) {
+          // Expresión regular simple para validar correo
+          const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+          return re.test(email);
         }
       };
     }
