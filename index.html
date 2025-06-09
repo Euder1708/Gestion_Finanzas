@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="es" x-data="loginForm()" @keydown.enter.prevent="login()">
+<html lang="es" x-data="loginForm()" x-init="checkSession()" @keydown.enter.prevent="login()">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -80,6 +80,14 @@
         success: '',
         loading: false,
 
+        // Revisa si ya hay sesión activa y redirige al dashboard
+        checkSession() {
+          const loggedIn = localStorage.getItem('loggedIn');
+          if (loggedIn === 'true') {
+            window.location.href = "dashboard.html";
+          }
+        },
+
         registrar() {
           this.error = '';
           this.success = '';
@@ -104,11 +112,14 @@
             localStorage.setItem('usuario', this.nombre);
             localStorage.setItem('correo', this.correo);
             localStorage.setItem('clave', this.password);
-            this.success = "¡Registrado correctamente! Ahora puedes iniciar sesión.";
+            localStorage.setItem('loggedIn', 'true'); // marcar como logueado
+
             this.loading = false;
-            this.nombre = '';
-            this.correo = '';
-            this.password = '';
+            this.error = '';
+            this.success = "¡Registrado correctamente! Redirigiendo...";
+
+            // Redirigir al dashboard
+            window.location.href = "dashboard.html";
           }, 500);
         },
 
@@ -132,8 +143,8 @@
           ) {
             this.loading = true;
             setTimeout(() => {
-              this.error = '';
-              this.success = '';
+              localStorage.setItem('loggedIn', 'true'); // marcar sesión iniciada
+              this.loading = false;
               window.location.href = "dashboard.html";
             }, 300);
           } else {
@@ -142,7 +153,6 @@
         },
 
         validarCorreo(email) {
-          // Expresión regular simple para validar correo
           const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
           return re.test(email);
         }
