@@ -1,167 +1,124 @@
 <!DOCTYPE html>
-<html lang="es" x-data="dashboard()" xmlns="http://www.w3.org/1999/xhtml">
+<html lang="es">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Panel Financiero</title>
+  <title>Dashboard - Finanzas</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
 </head>
-<body class="bg-gray-100">
+<body class="bg-gray-100" x-data="dashboard()" id="dashboard">
 
-  <!-- NAVBAR -->
-  <nav class="bg-blue-600 text-white p-4 flex justify-between">
-    <h1 class="text-xl font-bold">Gestión de Finanzas</h1>
-    <div class="flex gap-4 items-center">
-      <span id="nombreUsuario" class="font-semibold"></span>
-      <button @click="cerrarSesion" class="bg-red-500 px-4 py-2 rounded">Cerrar sesión</button>
-    </div>
+  <!-- Navbar -->
+  <nav class="bg-blue-600 p-4 text-white flex justify-between">
+    <h1 class="text-xl font-bold">Mi Dashboard</h1>
+    <button @click="logout" class="bg-red-500 px-3 py-1 rounded">Salir</button>
   </nav>
 
-  <!-- CONTENIDO -->
-  <div class="container mx-auto p-6" x-cloak>
-
-    <!-- TARJETAS RESUMEN -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-      <div class="bg-white p-6 rounded shadow">
-        <h2 class="text-gray-600">Ingresos</h2>
-        <p class="text-2xl font-bold text-green-600" x-text="ingresos"></p>
-      </div>
-      <div class="bg-white p-6 rounded shadow">
-        <h2 class="text-gray-600">Gastos</h2>
-        <p class="text-2xl font-bold text-red-600" x-text="gastos"></p>
-      </div>
-      <div class="bg-white p-6 rounded shadow">
-        <h2 class="text-gray-600">Ahorros</h2>
-        <p class="text-2xl font-bold text-blue-600" x-text="ahorros"></p>
-      </div>
+  <!-- Cards -->
+  <div class="p-6 grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div class="bg-white shadow rounded p-4 text-center">
+      <h2 class="text-gray-500">Ingresos</h2>
+      <p class="text-2xl font-bold text-green-600" 
+         x-text="ingresos.toLocaleString('es-ES',{style:'currency',currency:'USD'})"></p>
     </div>
-
-    <!-- FORMULARIO MOVIMIENTOS -->
-    <div class="bg-white p-6 rounded shadow mb-6">
-      <h2 class="text-xl font-bold mb-4">Agregar Movimiento</h2>
-      <form @submit.prevent="guardarMovimiento">
-        <div class="mb-4">
-          <label class="block text-gray-700">Tipo</label>
-          <select x-model="nuevoMovimiento.tipo" class="w-full border p-2 rounded">
-            <option value="ingreso">Ingreso</option>
-            <option value="gasto">Gasto</option>
-          </select>
-        </div>
-        <div class="mb-4">
-          <label class="block text-gray-700">Monto</label>
-          <input type="number" x-model.number="nuevoMovimiento.monto" class="w-full border p-2 rounded" required />
-        </div>
-        <div class="mb-4">
-          <label class="block text-gray-700">Descripción</label>
-          <input type="text" x-model="nuevoMovimiento.descripcion" class="w-full border p-2 rounded" required />
-        </div>
-        <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded">Guardar</button>
-      </form>
+    <div class="bg-white shadow rounded p-4 text-center">
+      <h2 class="text-gray-500">Gastos</h2>
+      <p class="text-2xl font-bold text-red-600" 
+         x-text="gastos.toLocaleString('es-ES',{style:'currency',currency:'USD'})"></p>
     </div>
-
-    <!-- HISTORIAL -->
-    <div class="bg-white p-6 rounded shadow">
-      <h2 class="text-xl font-bold mb-4">Historial de Movimientos</h2>
-      <ul>
-        <template x-for="mov in historial" :key="mov.id">
-          <li class="flex justify-between border-b py-2">
-            <span x-text="mov.descripcion"></span>
-            <span :class="mov.tipo === 'ingreso' ? 'text-green-600' : 'text-red-600'" x-text="mov.monto"></span>
-          </li>
-        </template>
-      </ul>
+    <div class="bg-white shadow rounded p-4 text-center">
+      <h2 class="text-gray-500">Ahorros</h2>
+      <p class="text-2xl font-bold text-blue-600" 
+         x-text="ahorros.toLocaleString('es-ES',{style:'currency',currency:'USD'})"></p>
     </div>
-
   </div>
 
-  <!-- FIREBASE -->
+  <!-- Movimientos -->
+  <div class="p-6">
+    <h2 class="text-xl font-bold mb-4">Movimientos</h2>
+    <ul>
+      <template x-for="mov in movimientos" :key="mov.id">
+        <li class="bg-white shadow rounded p-4 mb-2 flex justify-between">
+          <span x-text="mov.descripcion"></span>
+          <span :class="mov.tipo === 'ingreso' ? 'text-green-600' : 'text-red-600'" 
+                x-text="mov.valor.toLocaleString('es-ES',{style:'currency',currency:'USD'})"></span>
+        </li>
+      </template>
+    </ul>
+  </div>
+
+  <!-- Firebase SDK -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
+    import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-analytics.js";
     import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
-    import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, doc, getDoc } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
+    import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
 
+    // Configuración Firebase
     const firebaseConfig = {
       apiKey: "AIzaSyCwHJd-ieZQpo-zcdDUtaiLV3mHmjpbro0",
       authDomain: "gestion-finanzas-4a328.firebaseapp.com",
       projectId: "gestion-finanzas-4a328",
-      storageBucket: "gestion-finanzas-4a328.firebasestorage.app",
+      storageBucket: "gestion-finanzas-4a328.appspot.com", // 🔥 corregido
       messagingSenderId: "444522902062",
       appId: "1:444522902062:web:988f9a206e77ae0867a5bf",
       measurementId: "G-Y0W197GH5N"
     };
 
+    // Inicializar Firebase
     const app = initializeApp(firebaseConfig);
+    const analytics = getAnalytics(app);
     const auth = getAuth(app);
     const db = getFirestore(app);
 
-    // DASHBOARD APP
-    function dashboard() {
+    // Revisar sesión
+    onAuthStateChanged(auth, (user) => {
+      if (!user) {
+        window.location.href = "index.html"; // redirige si no hay login
+      } else {
+        const scope = document.querySelector("#dashboard").__x.$data;
+        scope.cargarMovimientos(user.uid);
+      }
+    });
+
+    // Exponer Alpine
+    window.dashboard = function () {
       return {
         ingresos: 0,
         gastos: 0,
         ahorros: 0,
-        historial: [],
-        nuevoMovimiento: { tipo: "ingreso", monto: 0, descripcion: "" },
+        movimientos: [],
 
-        async guardarMovimiento() {
-          if (!auth.currentUser) return;
-          const user = auth.currentUser;
-
-          await addDoc(collection(db, "usuarios", user.uid, "movimientos"), {
-            tipo: this.nuevoMovimiento.tipo,
-            monto: this.nuevoMovimiento.monto,
-            descripcion: this.nuevoMovimiento.descripcion,
-            fecha: new Date()
+        cargarMovimientos(uid) {
+          const ref = collection(db, "usuarios", uid, "movimientos");
+          onSnapshot(ref, (snapshot) => {
+            this.movimientos = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            this.calcularTotales();
           });
-
-          this.nuevoMovimiento = { tipo: "ingreso", monto: 0, descripcion: "" };
         },
 
-        cerrarSesion() {
+        calcularTotales() {
+          this.ingresos = this.movimientos
+            .filter(m => m.tipo === "ingreso")
+            .reduce((acc, m) => acc + m.valor, 0);
+
+          this.gastos = this.movimientos
+            .filter(m => m.tipo === "gasto")
+            .reduce((acc, m) => acc + m.valor, 0);
+
+          this.ahorros = this.ingresos - this.gastos;
+        },
+
+        logout() {
           signOut(auth).then(() => {
             window.location.href = "index.html";
           });
         }
-      }
-    }
-
-    // ESCUCHAR AUTH Y DATOS EN TIEMPO REAL
-    onAuthStateChanged(auth, async (user) => {
-      if (!user) {
-        window.location.href = "index.html";
-      } else {
-        // Saludo con nombre
-        const docRef = doc(db, "usuarios", user.uid);
-        const snap = await getDoc(docRef);
-        if (snap.exists()) {
-          document.getElementById("nombreUsuario").textContent = "Hola, " + snap.data().usuario;
-        }
-
-        // Escuchar movimientos en tiempo real (ordenados por fecha descendente)
-        const q = query(collection(db, "usuarios", user.uid, "movimientos"), orderBy("fecha", "desc"));
-        onSnapshot(q, (snapshot) => {
-          let ingresos = 0, gastos = 0, historial = [];
-          snapshot.forEach(doc => {
-            let mov = doc.data();
-            mov.id = doc.id;
-            historial.push(mov);
-            if (mov.tipo === "ingreso") ingresos += mov.monto;
-            if (mov.tipo === "gasto") gastos += mov.monto;
-          });
-
-          const ahorro = ingresos - gastos;
-
-          // Actualizar Alpine.js
-          const scope = document.querySelector("body").__x.$data;
-          scope.ingresos = ingresos;
-          scope.gastos = gastos;
-          scope.ahorros = ahorro;
-          scope.historial = historial;
-        });
-      }
-    });
+      };
+    };
   </script>
 
+  <!-- Alpine.js (después de Firebase) -->
+  <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
 </body>
 </html>
