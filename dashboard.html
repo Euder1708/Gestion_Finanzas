@@ -15,7 +15,7 @@
   </nav>
 
   <!-- Cards -->
-  <div class="p-6 grid grid-cols-1 md:grid-cols-4 gap-6">
+  <div class="p-6 grid grid-cols-1 md:grid-cols-3 gap-6">
     <div class="bg-white shadow rounded p-4 text-center">
       <h2 class="text-gray-500">Ingresos</h2>
       <p class="text-2xl font-bold text-green-600"
@@ -31,38 +31,35 @@
       <p class="text-2xl font-bold text-blue-600"
          x-text="ahorros.toLocaleString('es-ES',{style:'currency',currency:'USD'})"></p>
     </div>
-    <div class="bg-white shadow rounded p-4 text-center">
-      <h2 class="text-gray-500">Meta</h2>
-      <p class="text-2xl font-bold text-purple-600"
-         x-text="meta.toLocaleString('es-ES',{style:'currency',currency:'USD'})"></p>
-      <div class="w-full bg-gray-200 h-2 rounded mt-2">
-        <div class="bg-purple-500 h-2 rounded"
-             :style="`width: ${Math.min((ahorros/meta)*100,100)}%`"></div>
-      </div>
-    </div>
   </div>
 
-  <!-- Registrar Movimiento -->
+  <!-- Formulario agregar movimiento -->
   <div class="p-6 bg-white shadow rounded mb-6">
-    <h2 class="text-xl font-bold mb-4">Registrar Movimiento</h2>
-    <form @submit.prevent="agregarMovimiento" class="grid grid-cols-1 md:grid-cols-4 gap-4">
-      <input type="text" x-model="nuevo.descripcion" placeholder="Descripción" class="border p-2 rounded" required>
-      <input type="number" x-model.number="nuevo.valor" placeholder="Valor" class="border p-2 rounded" required>
-      <select x-model="nuevo.tipo" class="border p-2 rounded">
+    <h2 class="text-xl font-bold mb-4">Agregar Movimiento</h2>
+    <form @submit.prevent="agregarMovimiento">
+      <input type="text" x-model="nuevo.descripcion" placeholder="Descripción"
+             class="border p-2 mr-2 rounded" required>
+      <input type="number" x-model.number="nuevo.valor" placeholder="Valor"
+             class="border p-2 mr-2 rounded" required>
+      <select x-model="nuevo.tipo" class="border p-2 mr-2 rounded">
         <option value="ingreso">Ingreso</option>
         <option value="gasto">Gasto</option>
       </select>
-      <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded">Agregar</button>
+      <button type="submit" class="bg-green-500 text-white px-4 py-2 rounded">Agregar</button>
     </form>
   </div>
 
-  <!-- Definir Meta -->
+  <!-- Formulario meta de ahorro -->
   <div class="p-6 bg-white shadow rounded mb-6">
     <h2 class="text-xl font-bold mb-4">Definir Meta de Ahorro</h2>
-    <form @submit.prevent="guardarMeta" class="flex gap-4">
-      <input type="number" x-model.number="meta" placeholder="Monto meta" class="border p-2 rounded" required>
-      <button type="submit" class="bg-purple-600 text-white px-4 py-2 rounded">Guardar Meta</button>
+    <form @submit.prevent="guardarMeta">
+      <input type="number" x-model.number="meta" placeholder="Meta en USD"
+             class="border p-2 mr-2 rounded" required>
+      <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded">Guardar Meta</button>
     </form>
+    <p class="mt-2">Meta actual:
+      <span x-text="meta.toLocaleString('es-ES',{style:'currency',currency:'USD'})"></span>
+    </p>
   </div>
 
   <!-- Movimientos -->
@@ -83,7 +80,7 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
     import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
-    import { getFirestore, collection, onSnapshot, addDoc, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
+    import { getFirestore, collection, onSnapshot, addDoc, setDoc, doc } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
 
     // Configuración Firebase
     const firebaseConfig = {
@@ -101,68 +98,63 @@
     const auth = getAuth(app);
     const db = getFirestore(app);
 
-    // Revisar sesión
-    onAuthStateChanged(auth, (user) => {
-      if (!user) {
-        window.location.href = "index.html";
-      } else {
-        const scope = document.querySelector("#dashboard").__x.$data;
-        scope.uid = user.uid;
-        scope.cargarMovimientos(user.uid);
-        scope.cargarMeta(user.uid);
-      }
-    });
-
     // Exponer Alpine
     window.dashboard = function () {
       return {
-        uid: null,
         ingresos: 0,
         gastos: 0,
         ahorros: 0,
-        meta: 0,
         movimientos: [],
         nuevo: { descripcion: "", valor: 0, tipo: "ingreso" },
+        meta: 0,
+        uid: null,
 
+        // Cargar movimientos y meta
         cargarMovimientos(uid) {
+          this.uid = uid;
           const ref = collection(db, "usuarios", uid, "movimientos");
           onSnapshot(ref, (snapshot) => {
             this.movimientos = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             this.calcularTotales();
           });
+
+          // Cargar meta
+          onSnapshot(doc(db, "usuarios", uid, "config", "meta"), (docSnap) => {
+            if (docSnap.exists()) {
+              this.meta = docSnap.data().valor;
+            }
+          });
         },
 
+        // Agregar movimiento
         async agregarMovimiento() {
           if (!this.uid) return;
           const ref = collection(db, "usuarios", this.uid, "movimientos");
-          await addDoc(ref, this.nuevo);
+          await addDoc(ref, {
+            descripcion: this.nuevo.descripcion,
+            valor: this.nuevo.valor,
+            tipo: this.nuevo.tipo
+          });
           this.nuevo = { descripcion: "", valor: 0, tipo: "ingreso" };
         },
 
+        // Guardar meta
+        async guardarMeta() {
+          if (!this.uid) return;
+          await setDoc(doc(db, "usuarios", this.uid, "config", "meta"), {
+            valor: this.meta
+          });
+        },
+
+        // Calcular totales
         calcularTotales() {
           this.ingresos = this.movimientos
             .filter(m => m.tipo === "ingreso")
             .reduce((acc, m) => acc + m.valor, 0);
-
           this.gastos = this.movimientos
             .filter(m => m.tipo === "gasto")
             .reduce((acc, m) => acc + m.valor, 0);
-
           this.ahorros = this.ingresos - this.gastos;
-        },
-
-        async guardarMeta() {
-          if (!this.uid) return;
-          const ref = doc(db, "usuarios", this.uid, "config", "meta");
-          await setDoc(ref, { monto: this.meta });
-        },
-
-        async cargarMeta(uid) {
-          const ref = doc(db, "usuarios", uid, "config", "meta");
-          const snap = await getDoc(ref);
-          if (snap.exists()) {
-            this.meta = snap.data().monto;
-          }
         },
 
         logout() {
@@ -172,6 +164,16 @@
         }
       };
     };
+
+    // Revisar sesión
+    onAuthStateChanged(auth, (user) => {
+      if (!user) {
+        window.location.href = "index.html";
+      } else {
+        const scope = document.querySelector("#dashboard").__x.$data;
+        scope.cargarMovimientos(user.uid);
+      }
+    });
   </script>
 
   <!-- Alpine.js -->
