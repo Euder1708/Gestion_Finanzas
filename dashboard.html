@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -18,17 +19,17 @@
   <div class="p-6 grid grid-cols-1 md:grid-cols-3 gap-6">
     <div class="bg-white shadow rounded p-4 text-center">
       <h2 class="text-gray-500">Ingresos</h2>
-      <p class="text-2xl font-bold text-green-600" 
+      <p class="text-2xl font-bold text-green-600"
          x-text="ingresos.toLocaleString('es-ES',{style:'currency',currency:'USD'})"></p>
     </div>
     <div class="bg-white shadow rounded p-4 text-center">
       <h2 class="text-gray-500">Gastos</h2>
-      <p class="text-2xl font-bold text-red-600" 
+      <p class="text-2xl font-bold text-red-600"
          x-text="gastos.toLocaleString('es-ES',{style:'currency',currency:'USD'})"></p>
     </div>
     <div class="bg-white shadow rounded p-4 text-center">
       <h2 class="text-gray-500">Ahorros</h2>
-      <p class="text-2xl font-bold text-blue-600" 
+      <p class="text-2xl font-bold text-blue-600"
          x-text="ahorros.toLocaleString('es-ES',{style:'currency',currency:'USD'})"></p>
     </div>
   </div>
@@ -40,7 +41,7 @@
       <template x-for="mov in movimientos" :key="mov.id">
         <li class="bg-white shadow rounded p-4 mb-2 flex justify-between">
           <span x-text="mov.descripcion"></span>
-          <span :class="mov.tipo === 'ingreso' ? 'text-green-600' : 'text-red-600'" 
+          <span :class="mov.tipo === 'ingreso' ? 'text-green-600' : 'text-red-600'"
                 x-text="mov.valor.toLocaleString('es-ES',{style:'currency',currency:'USD'})"></span>
         </li>
       </template>
@@ -50,7 +51,6 @@
   <!-- Firebase SDK -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
-    import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-analytics.js";
     import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
     import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
 
@@ -59,7 +59,7 @@
       apiKey: "AIzaSyCwHJd-ieZQpo-zcdDUtaiLV3mHmjpbro0",
       authDomain: "gestion-finanzas-4a328.firebaseapp.com",
       projectId: "gestion-finanzas-4a328",
-      storageBucket: "gestion-finanzas-4a328.appspot.com", // 🔥 corregido
+      storageBucket: "gestion-finanzas-4a328.appspot.com",
       messagingSenderId: "444522902062",
       appId: "1:444522902062:web:988f9a206e77ae0867a5bf",
       measurementId: "G-Y0W197GH5N"
@@ -67,14 +67,13 @@
 
     // Inicializar Firebase
     const app = initializeApp(firebaseConfig);
-    const analytics = getAnalytics(app);
     const auth = getAuth(app);
     const db = getFirestore(app);
 
     // Revisar sesión
     onAuthStateChanged(auth, (user) => {
       if (!user) {
-        window.location.href = "index.html"; // redirige si no hay login
+        window.location.href = "index.html";
       } else {
         const scope = document.querySelector("#dashboard").__x.$data;
         scope.cargarMovimientos(user.uid);

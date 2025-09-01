@@ -1,52 +1,39 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Login & Registro - Finanzas</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Login - Finanzas</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+<body class="bg-gray-100 flex items-center justify-center h-screen">
+  <div class="bg-white shadow-md rounded-lg p-6 w-96">
+    <h1 class="text-2xl font-bold text-center mb-4">Gestión Finanzas</h1>
 
-  <div class="bg-white shadow-lg rounded-2xl p-8 w-96">
-    <h1 class="text-2xl font-bold text-center mb-6">Gestión de Finanzas</h1>
+    <!-- Email -->
+    <input type="email" id="email" placeholder="Correo electrónico"
+           class="w-full p-2 border rounded mb-2" />
 
-    <!-- Registro -->
-    <div id="registro" class="space-y-4">
-      <input id="usuario" type="text" placeholder="Usuario" class="w-full p-2 border rounded">
-      <input id="correo" type="email" placeholder="Correo" class="w-full p-2 border rounded">
-      <input id="password" type="password" placeholder="Contraseña" class="w-full p-2 border rounded">
-      <button onclick="registrar()" class="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600">
-        Registrarse
-      </button>
-    </div>
+    <!-- Password -->
+    <input type="password" id="password" placeholder="Contraseña"
+           class="w-full p-2 border rounded mb-2" />
 
-    <hr class="my-6">
-
-    <!-- Login -->
-    <div id="login" class="space-y-4">
-      <input id="correoLogin" type="email" placeholder="Correo" class="w-full p-2 border rounded">
-      <input id="passwordLogin" type="password" placeholder="Contraseña" class="w-full p-2 border rounded">
-      <button onclick="iniciarSesion()" class="w-full bg-green-500 text-white py-2 rounded hover:bg-green-600">
-        Iniciar Sesión
-      </button>
-    </div>
+    <!-- Botones -->
+    <button onclick="login()" class="w-full bg-blue-600 text-white p-2 rounded mb-2">Iniciar Sesión</button>
+    <button onclick="register()" class="w-full bg-green-600 text-white p-2 rounded">Registrarse</button>
   </div>
 
-  <!-- Firebase -->
+  <!-- Firebase SDK -->
   <script type="module">
-    // Importar SDKs desde CDN
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-analytics.js";
-    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-    import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
 
-    // Configuración de Firebase
+    // Configuración Firebase
     const firebaseConfig = {
       apiKey: "AIzaSyCwHJd-ieZQpo-zcdDUtaiLV3mHmjpbro0",
       authDomain: "gestion-finanzas-4a328.firebaseapp.com",
       projectId: "gestion-finanzas-4a328",
-      storageBucket: "gestion-finanzas-4a328.firebasestorage.app",
+      storageBucket: "gestion-finanzas-4a328.appspot.com",
       messagingSenderId: "444522902062",
       appId: "1:444522902062:web:988f9a206e77ae0867a5bf",
       measurementId: "G-Y0W197GH5N"
@@ -54,53 +41,31 @@
 
     // Inicializar Firebase
     const app = initializeApp(firebaseConfig);
-    const analytics = getAnalytics(app);
     const auth = getAuth(app);
-    const db = getFirestore(app);
 
-    // Función registrar usuario
-    async function registrar() {
-      const usuario = document.getElementById("usuario").value;
-      const correo = document.getElementById("correo").value;
+    // Login
+    window.login = function () {
+      const email = document.getElementById("email").value;
       const password = document.getElementById("password").value;
 
-      try {
-        const userCredential = await createUserWithEmailAndPassword(auth, correo, password);
-        const user = userCredential.user;
+      signInWithEmailAndPassword(auth, email, password)
+        .then(() => {
+          window.location.href = "dashboard.html";
+        })
+        .catch(err => alert("Error en login: " + err.message));
+    };
 
-        // Guardar en Firestore
-        await setDoc(doc(db, "usuarios", user.uid), {
-          usuario: usuario,
-          correo: correo,
-          creado: new Date().toISOString()
-        });
+    // Registro
+    window.register = function () {
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
 
-        alert("✅ Usuario registrado correctamente");
-        window.location.href = "dashboard.html";
-      } catch (error) {
-        alert("❌ Error al registrar: " + error.message);
-      }
-    }
-
-    // Función iniciar sesión
-    async function iniciarSesion() {
-      const correo = document.getElementById("correoLogin").value;
-      const password = document.getElementById("passwordLogin").value;
-
-      try {
-        await signInWithEmailAndPassword(auth, correo, password);
-        alert("✅ Inicio de sesión correcto");
-        window.location.href = "dashboard.html";
-      } catch (error) {
-        alert("❌ Error al iniciar sesión: " + error.message);
-      }
-    }
-
-    // Hacer accesibles las funciones a HTML
-    window.registrar = registrar;
-    window.iniciarSesion = iniciarSesion;
+      createUserWithEmailAndPassword(auth, email, password)
+        .then(() => {
+          window.location.href = "dashboard.html";
+        })
+        .catch(err => alert("Error en registro: " + err.message));
+    };
   </script>
 </body>
-</html>
-
 </html>
