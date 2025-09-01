@@ -51,36 +51,72 @@
     </div>
   </div>
 
-  <script>
-    function registrar() {
-      const usuario = document.getElementById('usuario').value;
-      const correo = document.getElementById('correo').value;
-      const password = document.getElementById('password').value;
+  <script type="module">
+    // Importar Firebase
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
+    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } 
+      from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
+    import { getFirestore, doc, setDoc } 
+      from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
 
-      if (usuario && correo && password) {
-        localStorage.setItem('usuario', usuario);
-        localStorage.setItem('correo', correo);
-        localStorage.setItem('password', password);
-        localStorage.setItem('loggedIn', 'true');
-        window.location.href = 'dashboard.html';
-      } else {
-        alert('Por favor, complete todos los campos.');
+    // Configuración de Firebase
+    const firebaseConfig = {
+      apiKey: "AIzaSyCwHJd-ieZQpo-zcdDUtaiLV3mHmjpbro0",
+      authDomain: "gestion-finanzas-4a328.firebaseapp.com",
+      projectId: "gestion-finanzas-4a328",
+      storageBucket: "gestion-finanzas-4a328.firebasestorage.app",
+      messagingSenderId: "444522902062",
+      appId: "1:444522902062:web:988f9a206e77ae0867a5bf",
+      measurementId: "G-Y0W197GH5N"
+    };
+
+    // Inicializar Firebase
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    // Función: registrar usuario
+    async function registrar() {
+      const usuario = document.getElementById("usuario").value;
+      const correo = document.getElementById("correo").value;
+      const password = document.getElementById("password").value;
+
+      try {
+        // Crear usuario en Firebase Auth
+        const userCredential = await createUserWithEmailAndPassword(auth, correo, password);
+        const user = userCredential.user;
+
+        // Guardar datos extra en Firestore
+        await setDoc(doc(db, "usuarios", user.uid), {
+          usuario: usuario,
+          correo: correo,
+          creado: new Date()
+        });
+
+        alert("✅ Usuario registrado correctamente");
+        window.location.href = "dashboard.html";
+      } catch (error) {
+        alert("❌ Error: " + error.message);
       }
     }
 
-    function iniciarSesion() {
-      const usuario = document.getElementById('usuario').value;
-      const password = document.getElementById('password').value;
-      const storedUser = localStorage.getItem('usuario');
-      const storedPass = localStorage.getItem('password');
+    // Función: iniciar sesión
+    async function iniciarSesion() {
+      const correo = document.getElementById("correo").value;
+      const password = document.getElementById("password").value;
 
-      if (usuario === storedUser && password === storedPass) {
-        localStorage.setItem('loggedIn', 'true');
-        window.location.href = 'dashboard.html';
-      } else {
-        alert('Usuario o contraseña incorrectos.');
+      try {
+        await signInWithEmailAndPassword(auth, correo, password);
+        alert("✅ Inicio de sesión correcto");
+        window.location.href = "dashboard.html";
+      } catch (error) {
+        alert("❌ Error: " + error.message);
       }
     }
+
+    // Exponer funciones al HTML
+    window.registrar = registrar;
+    window.iniciarSesion = iniciarSesion;
   </script>
 </body>
 </html>
